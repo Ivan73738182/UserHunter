@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">UserHunter</string>
+    <string name="hunt_button">🎯 ОХОТИТЬСЯ</string>
+    <string name="coins">Монеты: 0</string>
+</resources>
