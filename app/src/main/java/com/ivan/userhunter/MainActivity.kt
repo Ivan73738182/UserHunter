@@ -1,9 +1,9 @@
 package com.ivan.userhunter
 
 import android.os.Bundle
-import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
@@ -11,7 +11,7 @@ class MainActivity : AppCompatActivity() {
     private var coins = 0
     private lateinit var tvCoins: TextView
     private lateinit var tvUsername: TextView
-    private lateinit var btnHunt: Button
+    private lateinit var rootLayout: ConstraintLayout
 
     // Список ников для выпадения
     private val usernames = listOf(
@@ -25,13 +25,15 @@ class MainActivity : AppCompatActivity() {
 
         tvCoins = findViewById(R.id.tvCoins)
         tvUsername = findViewById(R.id.tvUsername)
-        btnHunt = findViewById(R.id.btnHunt)
+        rootLayout = findViewById(R.id.rootLayout)
 
-        btnHunt.setOnClickListener {
+        // Слушаем тап по любому месту экрана
+        rootLayout.setOnClickListener {
             // Выдаём случайный ник
             val randomUsername = usernames[Random.nextInt(usernames.size)]
             tvUsername.text = randomUsername
-            // Начисляем монеты (например, за каждый тап +5)
+            
+            // Начисляем монеты
             coins += 5
             tvCoins.text = "Монеты: $coins"
         }
