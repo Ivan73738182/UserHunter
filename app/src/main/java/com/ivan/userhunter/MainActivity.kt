@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 
@@ -21,6 +22,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvUsername: TextView
     private lateinit var rootLayout: ConstraintLayout
     private lateinit var floatingContainer: FrameLayout
+    private lateinit var btnReset: TextView
+
+    // Для сохранения
+    private val prefsName = "UserHunterPrefs"
+    private val keyCoins = "coins"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,13 +36,19 @@ class MainActivity : AppCompatActivity() {
         tvUsername = findViewById(R.id.tvUsername)
         rootLayout = findViewById(R.id.rootLayout)
         floatingContainer = findViewById(R.id.floatingContainer)
+        btnReset = findViewById(R.id.btnReset)
 
+        // Загружаем сохранённые монеты
+        val prefs = getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+        coins = prefs.getInt(keyCoins, 0)
+        tvCoins.text = "Монеты: $coins"
+
+        // Тап по экрану
         rootLayout.setOnTouchListener { view, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-                // 1. Получаем ник из генератора
                 val generated = UsernameGenerator.generate()
 
-                // 2. Анимация пружинки
+                // Анимация
                 tvUsername.animate()
                     .scaleX(0.85f)
                     .scaleY(0.85f)
@@ -51,22 +63,37 @@ class MainActivity : AppCompatActivity() {
                     }
                     .start()
 
-                // 3. Обновляем текст и цвет (в зависимости от редкости)
                 tvUsername.text = generated.name
                 tvUsername.setTextColor(generated.rarity.color)
 
-                // 4. Начисляем монеты
                 coins += generated.rarity.reward
                 tvCoins.text = "Монеты: $coins"
+                saveCoins()
 
-                // 5. Показываем всплывающее "+N" с цветом редкости
                 showFloatingText(event.x, event.y, generated.rarity.reward, generated.rarity.color)
-
-                // 6. Вибрация (сильнее для редких)
                 vibrate(generated.rarity)
             }
             true
         }
+
+        // Сброс прогресса
+        btnReset.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Сброс прогресса")
+                .setMessage("Ты уверен, что хочешь обнулить монеты?")
+                .setPositiveButton("Да") { _, _ ->
+                    coins = 0
+                    tvCoins.text = "Монеты: $coins"
+                    saveCoins()
+                }
+                .setNegativeButton("Отмена", null)
+                .show()
+        }
+    }
+
+    private fun saveCoins() {
+        val prefs = getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+        prefs.edit().putInt(keyCoins, coins).apply()
     }
 
     private fun showFloatingText(x: Float, y: Float, reward: Int, color: Int) {
