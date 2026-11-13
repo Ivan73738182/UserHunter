@@ -11,7 +11,6 @@ import android.view.MotionEvent
 import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 
@@ -22,9 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvUsername: TextView
     private lateinit var rootLayout: ConstraintLayout
     private lateinit var floatingContainer: FrameLayout
-    private lateinit var btnReset: TextView
 
-    // Для сохранения
     private val prefsName = "UserHunterPrefs"
     private val keyCoins = "coins"
 
@@ -36,19 +33,15 @@ class MainActivity : AppCompatActivity() {
         tvUsername = findViewById(R.id.tvUsername)
         rootLayout = findViewById(R.id.rootLayout)
         floatingContainer = findViewById(R.id.floatingContainer)
-        btnReset = findViewById(R.id.btnReset)
 
-        // Загружаем сохранённые монеты
         val prefs = getSharedPreferences(prefsName, Context.MODE_PRIVATE)
         coins = prefs.getInt(keyCoins, 0)
         tvCoins.text = "Монеты: $coins"
 
-        // Тап по экрану
         rootLayout.setOnTouchListener { view, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 val generated = UsernameGenerator.generate()
 
-                // Анимация
                 tvUsername.animate()
                     .scaleX(0.85f)
                     .scaleY(0.85f)
@@ -74,20 +67,6 @@ class MainActivity : AppCompatActivity() {
                 vibrate(generated.rarity)
             }
             true
-        }
-
-        // Сброс прогресса
-        btnReset.setOnClickListener {
-            AlertDialog.Builder(this)
-                .setTitle("Сброс прогресса")
-                .setMessage("Ты уверен, что хочешь обнулить монеты?")
-                .setPositiveButton("Да") { _, _ ->
-                    coins = 0
-                    tvCoins.text = "Монеты: $coins"
-                    saveCoins()
-                }
-                .setNegativeButton("Отмена", null)
-                .show()
         }
     }
 
@@ -132,9 +111,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         val duration = when (rarity) {
-            Rarity.COMMON -> 20L
-            Rarity.RARE -> 50L
+            Rarity.COMMON -> 15L
+            Rarity.RARE -> 30L
+            Rarity.EPIC -> 50L
             Rarity.LEGENDARY -> 100L
+            Rarity.ABSOLUTE -> 200L // Долгая вибрация для абсолюта
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
