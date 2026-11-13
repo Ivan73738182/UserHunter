@@ -13,7 +13,6 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,11 +21,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvUsername: TextView
     private lateinit var rootLayout: ConstraintLayout
     private lateinit var floatingContainer: FrameLayout
-
-    private val usernames = listOf(
-        "@user_123", "@ivan_2009", "@cool_guy", "@moscow", "@gamer_99",
-        "@ivan", "@admin", "@god", "@durov", "@love", "@star"
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +33,10 @@ class MainActivity : AppCompatActivity() {
 
         rootLayout.setOnTouchListener { view, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-                // 1. Анимация пружинки для ника
+                // 1. Получаем ник из генератора
+                val generated = UsernameGenerator.generate()
+
+                // 2. Анимация пружинки
                 tvUsername.animate()
                     .scaleX(0.85f)
                     .scaleY(0.85f)
@@ -54,27 +51,28 @@ class MainActivity : AppCompatActivity() {
                     }
                     .start()
 
-                // 2. Выдаём случайный ник
-                tvUsername.text = usernames[Random.nextInt(usernames.size)]
+                // 3. Обновляем текст и цвет (в зависимости от редкости)
+                tvUsername.text = generated.name
+                tvUsername.setTextColor(generated.rarity.color)
 
-                // 3. Начисляем монеты
-                coins += 5
+                // 4. Начисляем монеты
+                coins += generated.rarity.reward
                 tvCoins.text = "Монеты: $coins"
 
-                // 4. Показываем всплывающее "+5"
-                showFloatingText(event.x, event.y)
+                // 5. Показываем всплывающее "+N" с цветом редкости
+                showFloatingText(event.x, event.y, generated.rarity.reward, generated.rarity.color)
 
-                // 5. Вибрация
-                vibrate()
+                // 6. Вибрация (сильнее для редких)
+                vibrate(generated.rarity)
             }
             true
         }
     }
 
-    private fun showFloatingText(x: Float, y: Float) {
+    private fun showFloatingText(x: Float, y: Float, reward: Int, color: Int) {
         val tv = TextView(this)
-        tv.text = "+5"
-        tv.setTextColor(0xFFFFD700.toInt())
+        tv.text = "+$reward"
+        tv.setTextColor(color)
         tv.textSize = 28f
         tv.setShadowLayer(4f, 0f, 0f, 0xFF000000.toInt())
 
@@ -89,7 +87,6 @@ class MainActivity : AppCompatActivity() {
 
         floatingContainer.addView(tv)
 
-        // Анимация: улетает вверх и растворяется
         tv.animate()
             .translationY(-150f)
             .alpha(0f)
@@ -98,7 +95,7 @@ class MainActivity : AppCompatActivity() {
             .start()
     }
 
-    private fun vibrate() {
+    private fun vibrate(rarity: Rarity) {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
             vibratorManager.defaultVibrator
@@ -106,11 +103,18 @@ class MainActivity : AppCompatActivity() {
             @Suppress("DEPRECATION")
             getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
+
+        val duration = when (rarity) {
+            Rarity.COMMON -> 20L
+            Rarity.RARE -> 50L
+            Rarity.LEGENDARY -> 100L
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             @Suppress("DEPRECATION")
-            vibrator.vibrate(30)
+            vibrator.vibrate(duration)
         }
     }
 }
